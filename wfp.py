@@ -184,7 +184,7 @@ class WordProcessor:
         if should_set_a4:
             self._log("  > 已将页面大小设置为 A4。")
 
-    def _set_run_font(self, run, font_name, size_pt, set_color=False):
+    def _set_run_font(self, run, font_name, size_pt, set_color=False, bold=False):
         run.font.name = font_name
         run.font.size = Pt(size_pt)
         if set_color: run.font.color.rgb = RGBColor(0, 0, 0)
@@ -192,7 +192,7 @@ class WordProcessor:
         rFonts = rPr.get_or_add_rFonts()
         rFonts.set(qn('w:eastAsia'), font_name)
 
-    def _apply_font_to_runs(self, para, font_name, size_pt, set_color=False):
+    def _apply_font_to_runs(self, para, font_name, size_pt, set_color=False, bold=False):
         for run in para.runs: self._set_run_font(run, font_name, size_pt, set_color=set_color)
 
     def _get_paragraph_font_info(self, para):
@@ -514,7 +514,7 @@ class WordProcessor:
                 para = all_blocks[idx]
                 self._log(f"段落 {idx + 1}: 主标题行 - \"{para.text[:30]}...\"")
                 self._strip_leading_whitespace(para)
-                self._apply_font_to_runs(para, self.config['title_font'], self.config['title_size'], set_color=apply_color)
+                self._apply_font_to_runs(para, self.config['title_font'], self.config['title_size'], set_color=apply_color, bold=self.title_bold_var.get())
                 para.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 para.paragraph_format.first_line_indent = None
                 
@@ -535,7 +535,7 @@ class WordProcessor:
                 para = all_blocks[idx]
                 self._log(f"段落 {idx + 1}: 副标题行 - \"{para.text[:30]}...\"")
                 self._strip_leading_whitespace(para)
-                self._apply_font_to_runs(para, self.config['subtitle_font'], self.config['subtitle_size'], set_color=apply_color)
+                self._apply_font_to_runs(para, self.config['subtitle_font'], self.config['subtitle_size'], set_color=apply_color, bold=self.subtitle_bold_var.get())
                 para.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 para.paragraph_format.first_line_indent = None
                 
@@ -578,10 +578,10 @@ class WordProcessor:
 
                 if re_h1.match(text_to_check):
                     self._log(f"  > 文字识别为一级标题: \"{para_text_preview}...\"")
-                    self._apply_font_to_runs(para, self.config['h1_font'], self.config['h1_size'], set_color=apply_color)
+                    self._apply_font_to_runs(para, self.config['h1_font'], self.config['h1_size'], set_color=apply_color, bold=self.h1_bold_var.get())
                 elif re_h2.match(text_to_check):
                     self._log(f"  > 文字识别为二级标题: \"{para_text_preview}...\"")
-                    self._apply_font_to_runs(para, self.config['h2_font'], self.config['h2_size'], set_color=apply_color)
+                    self._apply_font_to_runs(para, self.config['h2_font'], self.config['h2_size'], set_color=apply_color, bold=self.h2_bold_var.get())
                 elif re_h3.match(text_to_check):
                     self._log(f"  > 文字识别为三级标题: \"{para_text_preview}...\"")
                     self._apply_font_to_runs(para, self.config['body_font'], self.config['body_size'], set_color=apply_color)
@@ -646,7 +646,7 @@ class WordProcessor:
                         para_title = all_blocks[idx]
                         self._log(f"    段落 {idx + 1}: 附件标题行 - \"{para_title.text.strip()[:30]}...\"")
                         self._strip_leading_whitespace(para_title)
-                        self._apply_font_to_runs(para_title, self.config['title_font'], self.config['title_size'], set_color=apply_color)
+                        self._apply_font_to_runs(para_title, self.config['title_font'], self.config['title_size'], set_color=apply_color, bold=self.title_bold_var.get())
                         para_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
                         para_title.paragraph_format.first_line_indent = None
                         
@@ -668,7 +668,7 @@ class WordProcessor:
                         para_subtitle = all_blocks[idx]
                         self._log(f"    段落 {idx + 1}: 附件副标题行 - \"{para_subtitle.text.strip()[:30]}...\"")
                         self._strip_leading_whitespace(para_subtitle)
-                        self._apply_font_to_runs(para_subtitle, self.config['subtitle_font'], self.config['subtitle_size'], set_color=apply_color)
+                        self._apply_font_to_runs(para_subtitle, self.config['subtitle_font'], self.config['subtitle_size'], set_color=apply_color, bold=self.subtitle_bold_var.get())
                         para_subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
                         para_subtitle.paragraph_format.first_line_indent = None
                         
@@ -697,7 +697,7 @@ class WordProcessor:
                 self._log(f"段落 {current_block_num}: 一级标题 - \"{para_text_preview}...\"")
                 self._strip_leading_whitespace(para)
                 self._format_heading(para, 1)
-                self._apply_font_to_runs(para, self.config['h1_font'], self.config['h1_size'], set_color=apply_color)
+                self._apply_font_to_runs(para, self.config['h1_font'], self.config['h1_size'], set_color=apply_color, bold=self.h1_bold_var.get())
                 self._apply_text_indent_and_align(para)
                 self._reset_pagination_properties(para)
 
@@ -729,7 +729,7 @@ class WordProcessor:
 
                         if run_end_pos <= title_len:
                             new_run = para.add_run(run_text)
-                            self._set_run_font(new_run, self.config['h2_font'], self.config['h2_size'], set_color=apply_color)
+                            self._set_run_font(new_run, self.config['h2_font'], self.config['h2_size'], set_color=apply_color, bold=self.h2_bold_var.get())
                         
                         elif char_count >= title_len:
                             new_run = para.add_run(run_text)
@@ -742,7 +742,7 @@ class WordProcessor:
                             
                             if title_part:
                                 title_run = para.add_run(title_part)
-                                self._set_run_font(title_run, self.config['h2_font'], self.config['h2_size'], set_color=apply_color)
+                                self._set_run_font(title_run, self.config['h2_font'], self.config['h2_size'], set_color=apply_color, bold=self.h2_bold_var.get())
                             if body_part:
                                 body_run = para.add_run(body_part)
                                 self._set_run_font(body_run, self.config['body_font'], self.config['body_size'], set_color=apply_color)
@@ -766,7 +766,7 @@ class WordProcessor:
                         self._log("  > 已将二级标题的括号统一为中文括号。")
                         for r in para.runs: r.text = r.text.replace('(', '（', 1).replace(')', '）', 1)
                     self._format_heading(para, 2)
-                    self._apply_font_to_runs(para, self.config['h2_font'], self.config['h2_size'], set_color=apply_color)
+                    self._apply_font_to_runs(para, self.config['h2_font'], self.config['h2_size'], set_color=apply_color, bold=self.h2_bold_var.get())
                     self._apply_text_indent_and_align(para)
                     self._reset_pagination_properties(para)
                     
@@ -846,7 +846,7 @@ class WordFormatterGUI:
             'subtitle_size': 16,
             'title_line_spacing': 33, 'subtitle_line_spacing': 33,
             'left_indent_cm': 0.0, 'right_indent_cm': 0.0,
-            'set_outline': True, 'enable_attachment_formatting': True,
+            'title_bold': True, 'subtitle_bold': True, 'h1_bold': True, 'h2_bold': True,'set_outline': True, 'enable_attachment_formatting': True,
             'force_a4': False
         }
         self.font_options = {
@@ -859,6 +859,10 @@ class WordFormatterGUI:
         self.set_outline_var = tk.BooleanVar(value=self.default_params['set_outline'])
         self.enable_attachment_var = tk.BooleanVar(value=self.default_params['enable_attachment_formatting'])
         self.force_a4_var = tk.BooleanVar(value=self.default_params['force_a4'])
+        self.title_bold_var = tk.BooleanVar(value=self.default_params['title_bold'])
+        self.subtitle_bold_var = tk.BooleanVar(value=self.default_params['subtitle_bold'])
+        self.h1_bold_var = tk.BooleanVar(value=self.default_params['h1_bold'])
+        self.h2_bold_var = tk.BooleanVar(value=self.default_params['h2_bold'])
         self.entries = {}
         
         self.default_config_path = "default_config.json"
@@ -1015,11 +1019,13 @@ class WordFormatterGUI:
         row = create_section_header("标题样式", title_help, row)
         create_combo("题目字体", 'title_font', self.font_options['title'], row, 0, readonly=False)
         create_font_size_combo("题目字号", 'title_size', row, 2)
-        create_entry("题目行距(磅)", 'title_line_spacing', row, 4)
+        ttk.Checkbutton(params_frame, text="加粗", variable=self.title_bold_var).grid(row=row, column=4, sticky=tk.W, padx=2)
+        create_entry("题目行距(磅)", 'title_line_spacing', row, 5)
         row += 1
         create_combo("副标题字体", 'subtitle_font', self.font_options['subtitle'], row, 0, readonly=False)
         create_font_size_combo("副标题字号", 'subtitle_size', row, 2)
-        create_entry("副标题行距(磅)", 'subtitle_line_spacing', row, 4)
+        ttk.Checkbutton(params_frame, text="加粗", variable=self.subtitle_bold_var).grid(row=row, column=4, sticky=tk.W, padx=2)
+        create_entry("副标题行距(磅)", 'subtitle_line_spacing', row, 5)
         row += 1
         
         # Section: Body and Headings
@@ -1027,9 +1033,11 @@ class WordFormatterGUI:
         row = create_section_header("正文与层级", headings_help, row)
         create_combo("一级标题字体", 'h1_font', self.font_options['h1'], row, 0, readonly=False)
         create_font_size_combo("一级标题字号", 'h1_size', row, 2)
+        ttk.Checkbutton(params_frame, text="加粗", variable=self.h1_bold_var).grid(row=row, column=4, sticky=tk.W, padx=2)
         row += 1
         create_combo("二级标题字体", 'h2_font', self.font_options['h2'], row, 0, readonly=False)
         create_font_size_combo("二级标题字号", 'h2_size', row, 2)
+        ttk.Checkbutton(params_frame, text="加粗", variable=self.h2_bold_var).grid(row=row, column=4, sticky=tk.W, padx=2)
         row += 1
         create_combo("正文/三四级字体", 'body_font', self.font_options['body'], row, 0, readonly=False)
         create_font_size_combo("正文/三四级字号", 'body_size', row, 2)
